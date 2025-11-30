@@ -7,9 +7,10 @@ Software architecture principles and patterns for maintainable systems.
 | Pattern | Description |
 |---------|-------------|
 | [Clean Architecture](./clean-architecture/) | Layered architecture with dependency inversion |
-| Design Patterns | GoF patterns and modern alternatives |
-| System Design | Distributed systems and scalability |
-| Testing | Unit, integration, and E2E testing strategies |
+| [Clean Code](./clean-code/) | Readability, naming, function design |
+| [Design Patterns](./design-patterns/) | GoF patterns and modern alternatives |
+| [System Design](./system-design/) | Distributed systems and scalability |
+| [Algorithms](./algorithms/) | Data structures and complexity analysis |
 
 ## Key Principles
 

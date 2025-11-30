@@ -17,6 +17,7 @@ Blueprints are **complete, working architectures** that combine multiple technol
 | Blueprint | Technologies | Use Case |
 |-----------|--------------|----------|
 | [Autonomous Browser Agent](./autonomous-browser-agent/) | LangGraph, Playwright, GPT-4o | AI agent that navigates web autonomously |
+| [Multi-Agent Research](./multi-agent-research/) | LangGraph, GPT-4o, Redis, Qdrant | 🆕 Coordinated research with specialized agents |
 | [Legal RAG with GraphDB](./legal-rag-graphdb/) | Neo4j, Qdrant, PyMuPDF | Hybrid search for legal documents |
 | [Geospatial Pipeline](./geospatial-pipeline/) | PostGIS, Open3D, Dask | Large-scale 3D point cloud processing |
 | [Scalable Scraping](./scalable-scraping/) | Playwright, Redis, FastAPI | High-volume web scraping architecture |
@@ -27,6 +28,9 @@ Blueprints are **complete, working architectures** that combine multiple technol
 ```
 Need an AI that browses the web?
 └── autonomous-browser-agent/
+
+Building a research/analysis system?
+└── multi-agent-research/
 
 Building document Q&A with relationships?
 └── legal-rag-graphdb/

@@ -35,31 +35,33 @@ knowledge_base/
 │
 ├── 1-architecture-patterns/     # Clean Code, SOLID, System Design
 │   ├── clean-architecture/
+│   ├── clean-code/
 │   ├── design-patterns/
 │   ├── system-design/
-│   └── testing/
+│   └── algorithms/
 │
 ├── 2-data-engineering/          # ETL, Scraping, Geospatial
 │   ├── etl-pipelines/
+│   ├── document-processing/     📄 PDF, OCR, Tables
 │   ├── geospatial-analysis/     ⭐ Differentiator
 │   ├── db-optimization/
 │   └── architecture/
 │
 ├── 3-ai-ml/                     # LLMs, RAG, Computer Vision
-│   ├── llm-agents/              ⭐ Flagship
+│   ├── llm-agents/              ⭐ Flagship (Multi-Agent, MCP)
 │   ├── rag-systems/             ⭐ Flagship
 │   ├── computer-vision/
-│   └── mlops/
+│   └── ml-ops/
 │
 ├── 4-automation/                # Browser, n8n, Event-Driven
 │   ├── browser-automation/
 │   ├── n8n-workflows/
 │   └── event-driven/
 │
-├── 5-python-production/         # FastAPI, PDF, Data Stack
+├── 5-python-advanced/           # Concurrency, Testing, Patterns
 │   ├── web-frameworks/
-│   ├── pdf-processing/
-│   └── data-stack/
+│   ├── data-stack/
+│   └── testing/
 │
 ├── 6-databases/                 # Vector, Graph, Postgres
 │   ├── vector-dbs/
@@ -68,10 +70,11 @@ knowledge_base/
 │
 ├── 7-infrastructure/            # Docker, AWS Serverless
 │   ├── docker/
-│   └── aws-serverless/
+│   └── aws-serverless/          🚀 API Gateway, Mangum, SAM
 │
 └── 99-blueprints/               🏆 Production Architectures
     ├── autonomous-browser-agent/
+    ├── multi-agent-research/    🆕 Coming soon
     ├── legal-rag-graphdb/
     ├── geospatial-pipeline/
     ├── scalable-scraping/

@@ -8,6 +8,7 @@ ETL pipelines, data architecture, and processing at scale.
 |------|-------------|
 | [ETL Pipelines](./etl-pipelines/) | Pipeline patterns, scraping, orchestration |
 | [Architecture](./architecture/) | Medallion, Star Schema, Data Vault |
+| [Document Processing](./document-processing/) | PDF, OCR, table extraction |
 | [Geospatial](./geospatial-analysis/) | GIS, point clouds, spatial processing |
 | [DB Optimization](./db-optimization/) | Query tuning, indexing strategies |
 

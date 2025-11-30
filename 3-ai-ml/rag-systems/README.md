@@ -214,6 +214,313 @@ vectorstore = Chroma(
 )
 ```
 
+---
+
+## Agentic RAG
+
+Agentic RAG extends traditional RAG with autonomous decision-making capabilities.
+
+### Why Agentic RAG?
+
+| Traditional RAG | Agentic RAG |
+|-----------------|-------------|
+| Fixed retrieval pipeline | Adaptive query routing |
+| Single retrieval attempt | Self-correcting with retries |
+| Static context | Dynamic context expansion |
+| No multi-hop reasoning | Iterative knowledge gathering |
+
+### Core Patterns
+
+#### 1. Query Router
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+class QueryRouter:
+    """Route queries to appropriate retrieval strategies"""
+    
+    def __init__(self):
+        self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        self.router_prompt = ChatPromptTemplate.from_template("""
+        Analyze this query and determine the best retrieval strategy.
+        
+        Query: {query}
+        
+        Available strategies:
+        - "vector": Semantic similarity search for conceptual questions
+        - "keyword": BM25/exact match for specific terms, codes, names
+        - "hybrid": Combine both for complex queries
+        - "graph": Knowledge graph traversal for relationship queries
+        - "multi_hop": Sequential retrieval for questions needing multiple sources
+        
+        Respond with JSON: {{"strategy": "...", "reason": "..."}}
+        """)
+    
+    async def route(self, query: str) -> str:
+        response = await self.llm.ainvoke(
+            self.router_prompt.format(query=query)
+        )
+        result = json.loads(response.content)
+        return result["strategy"]
+
+# Usage in RAG pipeline
+async def adaptive_retrieve(query: str, retrievers: dict):
+    router = QueryRouter()
+    strategy = await router.route(query)
+    
+    retriever = retrievers[strategy]
+    return await retriever.ainvoke(query)
+```
+
+#### 2. Self-Corrective RAG
+
+```python
+from langgraph.graph import StateGraph, END
+
+class CRAGState(TypedDict):
+    query: str
+    documents: list
+    generation: str
+    grade: str
+    retry_count: int
+
+def create_crag_graph():
+    """Corrective RAG with grading and fallback"""
+    
+    graph = StateGraph(CRAGState)
+    
+    # Nodes
+    graph.add_node("retrieve", retrieve_documents)
+    graph.add_node("grade_documents", grade_document_relevance)
+    graph.add_node("generate", generate_answer)
+    graph.add_node("grade_generation", grade_answer_quality)
+    graph.add_node("rewrite_query", rewrite_query)
+    graph.add_node("web_search", fallback_web_search)
+    
+    # Flow
+    graph.set_entry_point("retrieve")
+    graph.add_edge("retrieve", "grade_documents")
+    
+    # If documents are relevant, generate; else rewrite query
+    graph.add_conditional_edges(
+        "grade_documents",
+        documents_relevant,
+        {
+            "relevant": "generate",
+            "not_relevant": "rewrite_query"
+        }
+    )
+    
+    # After query rewrite, try web search as fallback
+    graph.add_edge("rewrite_query", "web_search")
+    graph.add_edge("web_search", "generate")
+    
+    # Grade the generation
+    graph.add_edge("generate", "grade_generation")
+    
+    # If generation is good, end; else retry
+    graph.add_conditional_edges(
+        "grade_generation",
+        generation_acceptable,
+        {
+            "acceptable": END,
+            "retry": "rewrite_query"
+        }
+    )
+    
+    return graph.compile()
+
+async def grade_document_relevance(state: CRAGState) -> dict:
+    """Grade retrieved documents for relevance"""
+    
+    grader_prompt = """Grade the relevance of this document to the query.
+    
+    Query: {query}
+    Document: {document}
+    
+    Score from 0-1 where 1 is highly relevant.
+    Respond with JSON: {{"score": 0.X, "reason": "..."}}
+    """
+    
+    graded_docs = []
+    for doc in state["documents"]:
+        response = await llm.ainvoke(
+            grader_prompt.format(query=state["query"], document=doc.page_content)
+        )
+        grade = json.loads(response.content)
+        if grade["score"] > 0.5:
+            graded_docs.append(doc)
+    
+    return {"documents": graded_docs}
+
+async def grade_answer_quality(state: CRAGState) -> dict:
+    """Check if answer is grounded and addresses the query"""
+    
+    grader_prompt = """Evaluate this answer:
+    
+    Query: {query}
+    Answer: {generation}
+    Source Documents: {documents}
+    
+    Check:
+    1. Is the answer grounded in the documents? (no hallucination)
+    2. Does it fully address the query?
+    
+    Respond with JSON: {{"grounded": true/false, "addresses_query": true/false, "issues": "..."}}
+    """
+    
+    response = await llm.ainvoke(
+        grader_prompt.format(
+            query=state["query"],
+            generation=state["generation"],
+            documents=state["documents"]
+        )
+    )
+    
+    result = json.loads(response.content)
+    
+    if result["grounded"] and result["addresses_query"]:
+        return {"grade": "acceptable"}
+    else:
+        return {"grade": "retry", "retry_count": state["retry_count"] + 1}
+```
+
+#### 3. Adaptive Retrieval
+
+```python
+class AdaptiveRetriever:
+    """Dynamically adjust retrieval based on results"""
+    
+    def __init__(self, vectorstore, k_initial: int = 5, k_max: int = 20):
+        self.vectorstore = vectorstore
+        self.k_initial = k_initial
+        self.k_max = k_max
+    
+    async def retrieve(self, query: str) -> list:
+        k = self.k_initial
+        
+        while k <= self.k_max:
+            docs = await self.vectorstore.asimilarity_search(query, k=k)
+            
+            # Check coverage
+            coverage = await self._assess_coverage(query, docs)
+            
+            if coverage["sufficient"]:
+                return docs
+            
+            # Need more documents
+            k = min(k * 2, self.k_max)
+        
+        return docs  # Return best effort
+    
+    async def _assess_coverage(self, query: str, docs: list) -> dict:
+        prompt = f"""Does this context sufficiently answer the query?
+        
+        Query: {query}
+        Context: {self._summarize_docs(docs)}
+        
+        Respond: {{"sufficient": true/false, "missing": "what's missing if any"}}
+        """
+        
+        response = await llm.ainvoke(prompt)
+        return json.loads(response.content)
+```
+
+#### 4. Multi-Hop Retrieval
+
+```python
+async def multi_hop_retrieve(query: str, vectorstore, max_hops: int = 3) -> list:
+    """Iterative retrieval for complex multi-part questions"""
+    
+    all_docs = []
+    current_query = query
+    
+    for hop in range(max_hops):
+        # Retrieve for current query
+        docs = await vectorstore.asimilarity_search(current_query, k=5)
+        all_docs.extend(docs)
+        
+        # Determine if more hops needed
+        next_query = await get_follow_up_query(query, current_query, docs)
+        
+        if next_query is None:
+            break
+        
+        current_query = next_query
+    
+    # Deduplicate and rank
+    return deduplicate_and_rank(all_docs, query)
+
+async def get_follow_up_query(
+    original_query: str, 
+    current_query: str, 
+    docs: list
+) -> str | None:
+    """Generate follow-up query if needed"""
+    
+    prompt = f"""Based on the original question and retrieved information,
+    determine if additional retrieval is needed.
+    
+    Original Question: {original_query}
+    Current Search: {current_query}
+    Retrieved Info: {summarize(docs)}
+    
+    If the original question is fully answerable, respond: {{"done": true}}
+    If more information is needed, respond: {{"done": false, "next_query": "..."}}
+    """
+    
+    response = await llm.ainvoke(prompt)
+    result = json.loads(response.content)
+    
+    return None if result["done"] else result["next_query"]
+```
+
+### Agentic RAG Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                           USER QUERY                                │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         QUERY ROUTER                                │
+│              Analyze → Route → vector/keyword/graph/multi-hop       │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      ADAPTIVE RETRIEVER                             │
+│         Retrieve → Grade → Expand if needed → Re-rank               │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      CONTEXT PROCESSOR                              │
+│          Compress → Reorder → Add metadata → Format                 │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         GENERATOR                                   │
+│              Generate answer with citations                         │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     ANSWER GRADER                                   │
+│      Check: Grounded? Complete? If not → Retry with feedback        │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                       FINAL ANSWER                                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Evaluation Metrics
 
 ```python
@@ -271,3 +578,4 @@ ensemble = EnsembleRetriever(
 - [LLM Agents](../llm-agents/README.md) - Agent frameworks for RAG orchestration
 - [Vector DBs](../../6-databases/vector-dbs/README.md) - Vector store deep dive
 - [Legal RAG Blueprint](../../99-blueprints/legal-rag-graphdb/README.md) - Complete implementation
+
