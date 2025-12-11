@@ -8,6 +8,7 @@
 
 | Project | Stack | Description |
 |---------|-------|-------------|
+| [**Multi-Agent Research**](./99-blueprints/multi-agent-research) | LangGraph, Tavily, MCP | Supervisor-Worker architecture for deep research with citation tracking |
 | [**Autonomous Browser Agent**](./99-blueprints/autonomous-browser-agent) | LangGraph, Playwright, GPT-4o | LLM-powered agent that navigates web autonomously via DOM analysis |
 | [**Legal RAG & Knowledge Graph**](./99-blueprints/legal-rag-graphdb) | Neo4j, Qdrant, PyMuPDF | Hybrid search system for legal documents with citation support |
 | [**Geospatial Data Pipeline**](./99-blueprints/geospatial-pipeline) | PostGIS, GDAL, Dask | Large-scale geospatial ETL with real-time visualization |
@@ -50,6 +51,7 @@ knowledge_base/
 ├── 3-ai-ml/                     # LLMs, RAG, Computer Vision
 │   ├── llm-agents/              ⭐ Flagship (Multi-Agent, MCP)
 │   ├── rag-systems/             ⭐ Flagship
+│   ├── observability/           🔍 LangSmith, RAGAS
 │   ├── computer-vision/
 │   └── ml-ops/
 │
@@ -74,7 +76,7 @@ knowledge_base/
 │
 └── 99-blueprints/               🏆 Production Architectures
     ├── autonomous-browser-agent/
-    ├── multi-agent-research/    🆕 Coming soon
+    ├── multi-agent-research/    ⭐ New (Supervisor Pattern)
     ├── legal-rag-graphdb/
     ├── geospatial-pipeline/
     ├── scalable-scraping/
@@ -105,6 +107,7 @@ graph LR
     subgraph "AI/ML Layer"
         A[LangGraph] --> B[GPT-4o / Claude]
         B --> C[RAG Pipeline]
+        B -.-> M[LangSmith]
     end
     
     subgraph "Data Layer"
@@ -130,7 +133,7 @@ This repository is for personal reference and portfolio purposes.
 
 ---
 
-*Last updated: 2025-11-30*
+*Last updated: 2025-12-12*
 - Build pipelines that feed AI systems reliably
 - Deploy ML models with production-grade observability
 - Automate human-in-the-loop workflows intelligently
