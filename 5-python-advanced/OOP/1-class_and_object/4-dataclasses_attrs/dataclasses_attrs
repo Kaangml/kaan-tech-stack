@@ -1,0 +1,6 @@
+   4. Dataclasses ve `attrs` Kütüphanesi:
+       * ML/AI projelerinde deney konfigürasyonlarını, hiperparametreleri veya veri
+         yapılarını (schema) tutmak için neden standart class'lar yerine dataclasses
+         kullanmak hayat kurtarır?
+       * frozen=True ile değişmez (immutable) konfigürasyonlar yaratmanın avantajları
+         nelerdir?
