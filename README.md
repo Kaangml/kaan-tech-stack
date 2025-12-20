@@ -85,6 +85,13 @@ knowledge_base/
 
 ---
 
+### 5. Python - İleri Seviye
+
+- **[Nesne Yönelimli Programlama (OOP)](./5-python-advanced/OOP/overview.md)**
+  - **Tamamlandı:** [Bölüm 1: Sınıflar ve Nesneler](./5-python-advanced/OOP/1-class_and_object/class_and_object.md) - Python nesne modelinin `__new__`, descriptor'lar, metaclass'ler ve dataclass'ler gibi temel yapı taşları incelendi.
+
+---
+
 ## 🚀 Quick Navigation
 
 ### By Use Case
